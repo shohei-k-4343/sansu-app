@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="さんすう">
+  <meta name="theme-color" content="#FFE4F0">
+  <title>さんすう きせかえ</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app">
+
+    <!-- 1. タイトル画面 -->
+    <section class="screen" id="screen-title">
+      <h1 class="title-logo">さんすう<br><span>きせかえ</span></h1>
+      <div class="avatar title-avatar" id="title-avatar"></div>
+      <p class="greeting" id="title-greeting"></p>
+      <div class="name-form" id="name-form">
+        <label for="name-input">なまえ</label>
+        <input id="name-input" type="text" maxlength="10" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <p class="hint">したの なまえ か ニックネームを いれてね</p>
+        <p class="error" id="name-error" hidden>なまえを いれてね</p>
+      </div>
+      <button class="btn btn-pink btn-big" id="start-btn" type="button">はじめる</button>
+    </section>
+
+    <!-- 2. ホーム画面 -->
+    <section class="screen" id="screen-home">
+      <button class="adult-btn" id="adult-btn" type="button">おとな</button>
+      <div class="home-layout">
+        <div class="avatar home-avatar" id="home-avatar"></div>
+        <div class="home-info">
+          <p class="home-name" id="home-name"></p>
+          <p class="home-level" id="home-level"></p>
+          <div class="stars" id="home-stars"></div>
+          <p class="home-next" id="home-next"></p>
+          <div class="home-buttons">
+            <button class="btn btn-pink btn-big" id="go-quiz" type="button">もんだい</button>
+            <button class="btn btn-sky btn-big" id="go-closet" type="button">きせかえ</button>
+          </div>
+          <button class="btn btn-small dev-btn" id="dev-levelup" type="button" hidden>（かいはつよう）＋10 せいかい</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. もんだい画面 -->
+    <section class="screen" id="screen-quiz">
+      <div class="quiz-top">
+        <button class="back-btn" id="quiz-quit" type="button" aria-label="ホームへ もどる">✕</button>
+        <p class="quiz-progress" id="quiz-progress"></p>
+        <span class="back-btn-spacer"></span>
+      </div>
+      <div class="timer" id="quiz-timer" hidden><div class="timer-fill" id="quiz-timer-fill"></div></div>
+      <div class="quiz-layout">
+        <div class="quiz-problem">
+          <p class="question" id="quiz-question"></p>
+          <div class="dots" id="quiz-dots"></div>
+          <div class="answer-box" id="quiz-answer"></div>
+        </div>
+        <div class="keypad" id="keypad">
+          <button type="button" data-key="1">1</button>
+          <button type="button" data-key="2">2</button>
+          <button type="button" data-key="3">3</button>
+          <button type="button" data-key="4">4</button>
+          <button type="button" data-key="5">5</button>
+          <button type="button" data-key="6">6</button>
+          <button type="button" data-key="7">7</button>
+          <button type="button" data-key="8">8</button>
+          <button type="button" data-key="9">9</button>
+          <button type="button" data-key="clear" class="key-clear">けす</button>
+          <button type="button" data-key="0">0</button>
+          <button type="button" data-key="ok" class="key-ok" id="key-ok">こたえる</button>
+        </div>
+      </div>
+      <div class="feedback" id="quiz-feedback" hidden>
+        <div class="feedback-card">
+          <div class="feedback-icon" id="feedback-icon"></div>
+          <p class="feedback-text" id="feedback-text"></p>
+          <p class="feedback-sub" id="feedback-sub"></p>
+          <button class="btn btn-pink" id="feedback-next" type="button" hidden>つぎへ</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. けっか画面 -->
+    <section class="screen" id="screen-result">
+      <div class="levelup" id="result-levelup" hidden>
+        <p class="levelup-text">レベルアップ！</p>
+        <p class="levelup-sub" id="result-levelup-sub"></p>
+      </div>
+      <p class="result-score" id="result-score"></p>
+      <p class="result-message" id="result-message"></p>
+      <div class="result-buttons">
+        <button class="btn btn-yellow btn-big" id="result-reward" type="button" hidden>ごほうびを みる</button>
+        <button class="btn btn-pink btn-big" id="result-again" type="button">もういちど</button>
+        <button class="btn btn-sky btn-big" id="result-home" type="button">ホームへ</button>
+      </div>
+    </section>
+
+    <!-- 5. ごほうび画面 -->
+    <section class="screen" id="screen-reward">
+      <h2 class="reward-title">ごほうび！</h2>
+      <div class="reward-items" id="reward-items"></div>
+      <div class="result-buttons">
+        <button class="btn btn-pink btn-big" id="reward-closet" type="button">きせかえする</button>
+        <button class="btn btn-sky btn-big" id="reward-home" type="button">ホームへ</button>
+      </div>
+    </section>
+
+    <!-- 6. きせかえ画面 -->
+    <section class="screen" id="screen-closet">
+      <div class="closet-layout">
+        <div class="avatar closet-avatar" id="closet-avatar"></div>
+        <div class="closet-panel">
+          <div class="tabs" id="closet-tabs"></div>
+          <div class="closet-items" id="closet-items"></div>
+          <button class="btn btn-sky" id="closet-home" type="button">ホームへ</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- おとなメニュー（ホーム画面の上に重ねて表示） -->
+    <div class="modal" id="adult-modal" hidden>
+      <div class="modal-card">
+        <div id="adult-lock">
+          <h2>おとなメニュー</h2>
+          <p>この問題に答えてください</p>
+          <p class="adult-question" id="adult-question"></p>
+          <input id="adult-answer" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off">
+          <p class="error" id="adult-error" hidden>ちがいます</p>
+          <div class="modal-buttons">
+            <button class="btn btn-small btn-gray" id="adult-cancel" type="button">とじる</button>
+            <button class="btn btn-small btn-pink" id="adult-submit" type="button">OK</button>
+          </div>
+        </div>
+        <div id="adult-menu" hidden>
+          <h2>おとなメニュー</h2>
+          <label for="adult-name">なまえの変更</label>
+          <div class="row">
+            <input id="adult-name" type="text" maxlength="10" autocomplete="off">
+            <button class="btn btn-small btn-pink" id="adult-name-save" type="button">保存</button>
+          </div>
+          <p class="error" id="adult-name-error" hidden>なまえを いれてね</p>
+          <p class="ok-text" id="adult-name-ok" hidden>保存しました</p>
+          <hr>
+          <div id="adult-reset-area">
+            <button class="btn btn-small btn-danger" id="adult-reset" type="button">データをリセット</button>
+          </div>
+          <div id="adult-confirm" hidden>
+            <p class="confirm-text">本当にけしますか？<br><small>レベル・アイテム・なまえが すべて消えます</small></p>
+            <div class="modal-buttons">
+              <button class="btn btn-small btn-gray" id="adult-confirm-no" type="button">やめる</button>
+              <button class="btn btn-small btn-danger" id="adult-confirm-yes" type="button">けす</button>
+            </div>
+          </div>
+          <hr>
+          <button class="btn btn-small btn-gray" id="adult-close" type="button">とじる</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="save-warning" id="save-warning" hidden>ほぞんできませんでした</p>
+  </main>
+
+  <script src="js/items.js"></script>
+  <script src="js/problems.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/avatar.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
