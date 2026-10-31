@@ -1,26 +1,49 @@
-// データの保存と読み込み（SPEC.md 6「データ構造」）
+// データの保存と読み込み（SPEC.md 6「データ構造」・14-8）
 // データは iPad の中（localStorage）だけに保存し、外には送らない
+// ※ 保存の名前（KEY）は変えないこと。変えると今までの記録が読めなくなる
 (function (root) {
   'use strict';
 
   var Items = root.Items || require('./items.js');
   var Problems = root.Problems || require('./problems.js');
+  var Kokugo = root.Kokugo || require('./kokugo.js');
+  var Kanji = root.Kanji || require('./kanji.js');
 
   var KEY = 'sansu-app-v1';
-  var VERSION = 1;
+  var VERSION = 2;
   var MAX_NAME_LENGTH = 10;
 
+  // level / totalCorrect / mistakes は さんすう の記録（version 1 からそのまま）
   function defaultData() {
-    return {
+    var data = {
       version: VERSION,
       childName: '',
       level: 1,
       totalCorrect: 0,
-      ownedItems: Items.idsUpToLevel(1),
+      kokugo: { level: 1, totalCorrect: 0, mistakes: [] },
+      ownedItems: [],
       equipped: Object.assign({}, Items.DEFAULT_EQUIPPED),
       mistakes: [],
       createdAt: new Date().toISOString()
     };
+    refreshOwned(data);
+    return data;
+  }
+
+  // 正解数からレベルと持っているアイテムを決め直す
+  function refreshOwned(data) {
+    data.level = Problems.levelFromCorrect(data.totalCorrect);
+    data.kokugo.level = Kokugo.levelFromCorrect(data.kokugo.totalCorrect);
+    data.ownedItems = Items.ownedIds({ sansu: data.level, kokugo: data.kokugo.level });
+  }
+
+  function validCount(value) {
+    var n = Number(value);
+    return Number.isInteger(n) && n >= 0 ? n : 0;
+  }
+
+  function validMissCount(value) {
+    return Number.isInteger(value) && value > 0 ? value : 1;
   }
 
   function cleanName(name) {
@@ -39,12 +62,25 @@
     if (!raw || typeof raw !== 'object') return data;
 
     data.childName = cleanName(raw.childName);
+    if (typeof raw.createdAt === 'string') data.createdAt = raw.createdAt;
 
-    var total = Number(raw.totalCorrect);
-    data.totalCorrect = Number.isInteger(total) && total >= 0 ? total : 0;
     // レベルは正解数から決まる（食い違っていたら正解数を正しいものとする）
-    data.level = Problems.levelFromCorrect(data.totalCorrect);
-    data.ownedItems = Items.idsUpToLevel(data.level);
+    data.totalCorrect = validCount(raw.totalCorrect);
+    var kokugo = raw.kokugo && typeof raw.kokugo === 'object' ? raw.kokugo : {};
+    data.kokugo.totalCorrect = validCount(kokugo.totalCorrect);
+    refreshOwned(data);
+
+    if (Array.isArray(kokugo.mistakes)) {
+      data.kokugo.mistakes = kokugo.mistakes.filter(function (m) {
+        return m && Kanji.getKanji(m.kanji);
+      }).slice(0, Kokugo.MAX_MISTAKES).map(function (m) {
+        return {
+          kanji: m.kanji,
+          missCount: validMissCount(m.missCount),
+          lastMissedAt: typeof m.lastMissedAt === 'string' ? m.lastMissedAt : data.createdAt
+        };
+      });
+    }
 
     var eq = raw.equipped && typeof raw.equipped === 'object' ? raw.equipped : {};
     Items.SLOTS.forEach(function (slot) {
@@ -63,13 +99,12 @@
           a: m.a,
           b: m.b,
           op: m.op,
-          missCount: Number.isInteger(m.missCount) && m.missCount > 0 ? m.missCount : 1,
+          missCount: validMissCount(m.missCount),
           lastMissedAt: typeof m.lastMissedAt === 'string' ? m.lastMissedAt : data.createdAt
         };
       });
     }
 
-    if (typeof raw.createdAt === 'string') data.createdAt = raw.createdAt;
     return data;
   }
 
@@ -110,6 +145,7 @@
     KEY: KEY,
     MAX_NAME_LENGTH: MAX_NAME_LENGTH,
     defaultData: defaultData,
+    refreshOwned: refreshOwned,
     cleanName: cleanName,
     normalize: normalize,
     load: load,

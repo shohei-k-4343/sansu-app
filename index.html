@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="さんすう">
   <meta name="theme-color" content="#FFE4F0">
-  <title>さんすう きせかえ</title>
+  <title>さんすう・こくご きせかえ</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
   <link rel="icon" href="icons/icon-192.png">
@@ -38,14 +38,27 @@
         <div class="avatar home-avatar" id="home-avatar"></div>
         <div class="home-info">
           <p class="home-name" id="home-name"></p>
-          <p class="home-level" id="home-level"></p>
-          <div class="stars" id="home-stars"></div>
-          <p class="home-next" id="home-next"></p>
-          <div class="home-buttons">
-            <button class="btn btn-pink btn-big" id="go-quiz" type="button">もんだい</button>
-            <button class="btn btn-sky btn-big" id="go-closet" type="button">きせかえ</button>
+          <div class="subject-rows">
+            <div class="subject-row sansu">
+              <p class="subject-title"><span class="subject-name">さんすう</span><span class="subject-level" id="home-level-sansu"></span></p>
+              <div class="stars" id="home-stars-sansu"></div>
+              <p class="home-next" id="home-next-sansu"></p>
+            </div>
+            <div class="subject-row kokugo">
+              <p class="subject-title"><span class="subject-name">こくご</span><span class="subject-level" id="home-level-kokugo"></span></p>
+              <div class="stars" id="home-stars-kokugo"></div>
+              <p class="home-next" id="home-next-kokugo"></p>
+            </div>
           </div>
-          <button class="btn btn-small dev-btn" id="dev-levelup" type="button" hidden>（かいはつよう）＋10 せいかい</button>
+          <div class="home-buttons">
+            <button class="btn btn-pink btn-big btn-subject" id="go-quiz" type="button">さんすう</button>
+            <button class="btn btn-mint btn-big btn-subject" id="go-kokugo" type="button">こくご</button>
+            <button class="btn btn-sky btn-big btn-subject" id="go-closet" type="button">きせかえ</button>
+          </div>
+          <div class="dev-buttons" id="dev-buttons" hidden>
+            <button class="btn btn-small dev-btn" id="dev-levelup" type="button">（かいはつよう）さんすう ＋10</button>
+            <button class="btn btn-small dev-btn" id="dev-levelup-kokugo" type="button">（かいはつよう）こくご ＋8</button>
+          </div>
         </div>
       </div>
     </section>
@@ -79,13 +92,26 @@
           <button type="button" data-key="ok" class="key-ok" id="key-ok">こたえる</button>
         </div>
       </div>
-      <div class="feedback" id="quiz-feedback" hidden>
-        <div class="feedback-card">
-          <div class="feedback-icon" id="feedback-icon"></div>
-          <p class="feedback-text" id="feedback-text"></p>
-          <p class="feedback-sub" id="feedback-sub"></p>
-          <button class="btn btn-pink" id="feedback-next" type="button" hidden>つぎへ</button>
+    </section>
+
+    <!-- 3-2. こくごの問題画面 -->
+    <section class="screen" id="screen-kokugo">
+      <div class="quiz-top">
+        <button class="back-btn" id="kokugo-quit" type="button" aria-label="ホームへ もどる">✕</button>
+        <p class="quiz-progress" id="kokugo-progress"></p>
+        <span class="back-btn-spacer"></span>
+      </div>
+      <div class="kokugo-layout" id="kokugo-trace-phase">
+        <div class="trace-box" id="trace-box"></div>
+        <div class="trace-side">
+          <p class="kokugo-instruction" id="kokugo-instruction"></p>
+          <p class="stroke-count" id="stroke-count"></p>
         </div>
+      </div>
+      <div class="kokugo-layout kokugo-read" id="kokugo-read-phase" hidden>
+        <p class="kokugo-sentence" id="kokugo-sentence"></p>
+        <p class="kokugo-ask">この かんじ、なんて よむ？</p>
+        <div class="choices" id="kokugo-choices"></div>
       </div>
     </section>
 
@@ -126,6 +152,16 @@
       </div>
     </section>
 
+    <!-- せいかい・おしい の表示（さんすう・こくご で共通） -->
+    <div class="feedback" id="quiz-feedback" hidden>
+      <div class="feedback-card">
+        <div class="feedback-icon" id="feedback-icon"></div>
+        <p class="feedback-text" id="feedback-text"></p>
+        <p class="feedback-sub" id="feedback-sub"></p>
+        <button class="btn btn-pink" id="feedback-next" type="button" hidden>つぎへ</button>
+      </div>
+    </div>
+
     <!-- おとなメニュー（ホーム画面の上に重ねて表示） -->
     <div class="modal" id="adult-modal" hidden>
       <div class="modal-card">
@@ -162,6 +198,7 @@
           </div>
           <hr>
           <button class="btn btn-small btn-gray" id="adult-close" type="button">とじる</button>
+          <p class="credit">書き順データ：KanjiVG（© Ulrich Apel）<br>CC BY-SA 3.0 ／ kanjivg.tagaini.net</p>
         </div>
       </div>
     </div>
@@ -171,8 +208,12 @@
 
   <script src="js/items.js"></script>
   <script src="js/problems.js"></script>
+  <script src="js/kanji.js"></script>
+  <script src="js/kanji-strokes.js"></script>
+  <script src="js/kokugo.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/avatar.js"></script>
+  <script src="js/trace.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

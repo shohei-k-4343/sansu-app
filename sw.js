@@ -1,6 +1,6 @@
 // インターネットなしでも動かすためのしくみ（サービスワーカー）
 // アプリのファイルを変更したら、CACHE_NAME の数字を1つ上げると新しい版に入れ替わる
-var CACHE_NAME = 'sansu-app-v1';
+var CACHE_NAME = 'sansu-app-v2';
 var FILES = [
   './',
   './index.html',
@@ -8,8 +8,12 @@ var FILES = [
   './manifest.json',
   './js/items.js',
   './js/problems.js',
+  './js/kanji.js',
+  './js/kanji-strokes.js',
+  './js/kokugo.js',
   './js/storage.js',
   './js/avatar.js',
+  './js/trace.js',
   './js/app.js',
   './icons/icon-180.png',
   './icons/icon-192.png',

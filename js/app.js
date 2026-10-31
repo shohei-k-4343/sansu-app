@@ -15,8 +15,18 @@
     quiz: null,
     rewardItems: [],
     closetSlot: 'clothes',
-    adultAnswer: null
+    adultAnswer: null,
+    feedbackNext: null
   };
+
+  // 教科ごとの記録・ルール
+  function subjectRecord(subject) {
+    return subject === 'kokugo' ? state.data.kokugo : state.data;
+  }
+
+  function subjectRules(subject) {
+    return subject === 'kokugo' ? Kokugo : Problems;
+  }
 
   // ---------- 共通 ----------
 
@@ -31,6 +41,7 @@
   }
 
   function showScreen(name) {
+    $('quiz-feedback').hidden = true;
     var screens = document.querySelectorAll('.screen');
     for (var i = 0; i < screens.length; i++) {
       screens[i].classList.toggle('active', screens[i].id === 'screen-' + name);
@@ -72,37 +83,39 @@
     var d = state.data;
     $('home-avatar').innerHTML = Avatar.renderAvatar(d.equipped);
     $('home-name').textContent = displayName();
-    $('home-level').textContent = 'レベル ' + d.level;
-
-    var toNext = Problems.correctToNextLevel(d.totalCorrect);
-    var filled = toNext === 0 ? Problems.CORRECT_PER_LEVEL : Problems.CORRECT_PER_LEVEL - toNext;
-    var stars = '';
-    for (var i = 0; i < Problems.CORRECT_PER_LEVEL; i++) stars += Avatar.renderStar(i < filled);
-    $('home-stars').innerHTML = stars;
-    $('home-next').textContent = toNext === 0
-      ? 'さいこう レベル！ すごい！'
-      : 'あと ' + toNext + 'もん せいかいで レベルアップ';
-    $('dev-levelup').hidden = !DEV_MODE;
+    ['sansu', 'kokugo'].forEach(renderSubjectRow);
+    $('dev-buttons').hidden = !DEV_MODE;
   }
 
-  // 動作確認用：正解数を10増やす（?dev=1 のときだけ表示）
-  function onDevLevelUp() {
-    addCorrect(Problems.CORRECT_PER_LEVEL);
+  function renderSubjectRow(subject) {
+    var rec = subjectRecord(subject);
+    var rules = subjectRules(subject);
+    var toNext = rules.correctToNextLevel(rec.totalCorrect);
+    var filled = toNext === 0 ? rules.CORRECT_PER_LEVEL : rules.CORRECT_PER_LEVEL - toNext;
+    var stars = '';
+    for (var i = 0; i < rules.CORRECT_PER_LEVEL; i++) stars += Avatar.renderStar(i < filled);
+    $('home-level-' + subject).textContent = 'レベル ' + rec.level;
+    $('home-stars-' + subject).innerHTML = stars;
+    $('home-next-' + subject).textContent = toNext === 0 ? 'さいこう レベル！' : 'あと ' + toNext + 'もん';
+  }
+
+  // 動作確認用：正解数を1レベルぶん増やす（?dev=1 のときだけ表示）
+  function onDevLevelUp(subject) {
+    addCorrect(subject, subjectRules(subject).CORRECT_PER_LEVEL);
     persist();
     renderHome();
   }
 
-  function addCorrect(n) {
-    var d = state.data;
-    d.totalCorrect += n;
-    d.level = Problems.levelFromCorrect(d.totalCorrect);
-    d.ownedItems = Items.idsUpToLevel(d.level);
+  function addCorrect(subject, n) {
+    subjectRecord(subject).totalCorrect += n;
+    SaveData.refreshOwned(state.data);
   }
 
   // ---------- 3. もんだい ----------
 
   function startQuiz() {
     state.quiz = {
+      subject: 'sansu',
       set: Problems.buildSet(state.data.level, state.data.mistakes),
       index: 0,
       input: '',
@@ -178,7 +191,7 @@
       // 1回目で正解したら、間違えた問題リストから消す
       if (q.tries === 0) state.data.mistakes = Problems.removeMistake(state.data.mistakes, p);
       q.correctCount += 1;
-      addCorrect(1);
+      addCorrect('sansu', 1);
       persist();
       stopTimer();
       showFeedback('correct');
@@ -235,12 +248,24 @@
       answer: equation,
       timeout: 'こたえは ' + equation
     };
-    $('feedback-icon').innerHTML = kind === 'correct' ? Avatar.renderHanamaru() : Avatar.renderSoftFace();
-    $('feedback-text').textContent = texts[kind];
-    $('feedback-text').classList.toggle('soft', kind !== 'correct');
-    $('feedback-sub').textContent = subs[kind];
-    $('feedback-next').hidden = !(kind === 'answer' || kind === 'timeout');
+    openFeedback(kind === 'correct', texts[kind], subs[kind], kind === 'answer' || kind === 'timeout' ? nextQuestion : null);
+  }
+
+  // せいかい・おしい の表示。onNext があれば「つぎへ」ボタンを出す
+  function openFeedback(good, text, sub, onNext) {
+    $('feedback-icon').innerHTML = good ? Avatar.renderHanamaru() : Avatar.renderSoftFace();
+    $('feedback-text').textContent = text;
+    $('feedback-text').classList.toggle('soft', !good);
+    $('feedback-sub').textContent = sub;
+    state.feedbackNext = onNext;
+    $('feedback-next').hidden = !onNext;
     $('quiz-feedback').hidden = false;
+  }
+
+  function onFeedbackNext() {
+    var next = state.feedbackNext;
+    state.feedbackNext = null;
+    if (next) next();
   }
 
   function nextQuestion() {
@@ -262,9 +287,141 @@
     if (state.quiz) {
       clearTimeout(state.quiz.feedbackTimeout);
       stopTimer();
+      if (state.quiz.trace) state.quiz.trace.destroy();
       state.quiz = null;
     }
     showScreen('home');
+  }
+
+  // ---------- 3-2. こくご ----------
+
+  function startKokugo() {
+    state.quiz = {
+      subject: 'kokugo',
+      set: Kokugo.buildSet(state.data.kokugo.level, state.data.kokugo.mistakes),
+      index: 0,
+      tries: 0,
+      correctCount: 0,
+      levelBefore: state.data.kokugo.level,
+      locked: false,
+      trace: null,
+      feedbackTimeout: null
+    };
+    showScreen('kokugo');
+  }
+
+  function currentKanji() {
+    return Kanji.getKanji(state.quiz.set[state.quiz.index].kanji);
+  }
+
+  function renderKokugo() {
+    var q = state.quiz;
+    var k = currentKanji();
+    q.tries = 0;
+    q.locked = false;
+    $('kokugo-progress').textContent = (q.index + 1) + ' / ' + q.set.length;
+    $('kokugo-trace-phase').hidden = false;
+    $('kokugo-read-phase').hidden = true;
+    setInstruction('ひかっている せんを なぞってね', false);
+
+    var strokes = KanjiStrokes[k.kanji];
+    if (q.trace) q.trace.destroy();
+    q.trace = Trace.create($('trace-box'), strokes, {
+      onStrokeOk: function (i) {
+        setInstruction(i + 1 < strokes.length ? 'じょうず！ つぎの せんだよ' : 'できた！', false);
+        updateStrokeCount(i + 1, strokes.length);
+      },
+      onStrokeFail: function () {
+        setInstruction('おしい！ ひかっている せんを なぞってね', true);
+      },
+      onAutoStroke: function (i) {
+        setInstruction('おてほんを みてね', true);
+        updateStrokeCount(i + 1, strokes.length);
+      },
+      onDone: showReadPhase
+    });
+    updateStrokeCount(0, strokes.length);
+  }
+
+  function setInstruction(text, oops) {
+    $('kokugo-instruction').textContent = text;
+    $('kokugo-instruction').classList.toggle('oops', oops);
+  }
+
+  function updateStrokeCount(done, total) {
+    $('stroke-count').textContent = done >= total ? total + 'かく ぜんぶ かけたよ' : (done + 1) + ' かくめ ／ ' + total + 'かく';
+  }
+
+  function showReadPhase() {
+    var k = currentKanji();
+    $('kokugo-trace-phase').hidden = true;
+    $('kokugo-read-phase').hidden = false;
+    var sentence = $('kokugo-sentence');
+    sentence.textContent = '';
+    sentence.appendChild(document.createTextNode(k.before));
+    var target = document.createElement('span');
+    target.className = 'target';
+    target.textContent = k.kanji;
+    sentence.appendChild(target);
+    sentence.appendChild(document.createTextNode(k.after));
+
+    var html = '';
+    Kokugo.choicesFor(k.kanji).forEach(function (reading) {
+      html += '<button type="button" class="choice" data-choice="' + reading + '">' + reading + '</button>';
+    });
+    $('kokugo-choices').innerHTML = html;
+  }
+
+  function onChoice(e) {
+    var btn = e.target.closest('[data-choice]');
+    var q = state.quiz;
+    if (!btn || !q || q.locked || btn.disabled) return;
+    var k = currentKanji();
+    var reading = btn.getAttribute('data-choice');
+    var rec = state.data.kokugo;
+    var fullReading = k.before + k.reading + k.after;
+
+    if (reading === k.reading) {
+      if (q.tries === 0) rec.mistakes = Kokugo.removeMistake(rec.mistakes, k.kanji);
+      q.correctCount += 1;
+      addCorrect('kokugo', 1);
+      persist();
+      q.locked = true;
+      btn.classList.add('correct');
+      openFeedback(true, 'せいかい！', fullReading, null);
+      q.feedbackTimeout = setTimeout(nextKanji, CORRECT_DELAY_MS + 300);
+      return;
+    }
+
+    btn.disabled = true;
+    if (q.tries === 0) {
+      q.tries = 1;
+      rec.mistakes = Kokugo.recordMistake(rec.mistakes, k.kanji, new Date().toISOString());
+      persist();
+      q.locked = true;
+      openFeedback(false, 'おしい！', 'もういちど えらんでね', null);
+      q.feedbackTimeout = setTimeout(function () {
+        q.locked = false;
+        $('quiz-feedback').hidden = true;
+      }, RETRY_DELAY_MS);
+      return;
+    }
+
+    q.locked = true;
+    openFeedback(false, 'こたえは「' + k.reading + '」だよ', fullReading, nextKanji);
+  }
+
+  function nextKanji() {
+    var q = state.quiz;
+    clearTimeout(q.feedbackTimeout);
+    $('quiz-feedback').hidden = true;
+    q.index += 1;
+    if (q.index >= q.set.length) {
+      if (q.trace) q.trace.destroy();
+      showScreen('result');
+      return;
+    }
+    renderKokugo();
   }
 
   // ---------- タイマー（レベル8以上） ----------
@@ -329,19 +486,19 @@
   function renderResult() {
     var q = state.quiz;
     var total = q.set.length;
-    var levelAfter = state.data.level;
+    var levelAfter = subjectRecord(q.subject).level;
     var leveledUp = levelAfter > q.levelBefore;
-    state.rewardItems = Items.unlockedBetween(q.levelBefore, levelAfter);
+    state.rewardItems = Items.unlockedBetween(q.subject, q.levelBefore, levelAfter);
 
     $('result-score').innerHTML = total + 'もんちゅう <span class="big">' + q.correctCount + '</span>もん せいかい！';
     var message;
     if (q.correctCount === total) message = 'ぜんぶ せいかい！ すごい！';
-    else if (q.correctCount >= 3) message = 'よく できたね！';
+    else if (q.correctCount >= Math.ceil(total / 2)) message = 'よく できたね！';
     else message = 'がんばったね！ つぎも やってみよう';
     $('result-message').textContent = displayName() + '、' + message;
 
     $('result-levelup').hidden = !leveledUp;
-    $('result-levelup-sub').textContent = 'レベル ' + levelAfter + ' に なったよ';
+    $('result-levelup-sub').textContent = Items.SUBJECT_NAMES[q.subject] + ' レベル ' + levelAfter + ' に なったよ';
     $('result-reward').hidden = !(leveledUp && state.rewardItems.length > 0);
     $('result-again').hidden = !$('result-reward').hidden;
   }
@@ -390,7 +547,7 @@
           '</div><span class="name">' + item.name + '</span></button>';
       } else {
         tiles += '<div class="item-tile locked"><div class="thumb">' + Avatar.renderItem(item.id) +
-          '</div><span class="name">レベル' + item.level + 'で<br>もらえるよ</span></div>';
+          '</div><span class="name">' + Items.SUBJECT_NAMES[item.subject] + '<br>レベル' + item.level + 'で もらえるよ</span></div>';
       }
     });
     $('closet-items').innerHTML = tiles;
@@ -479,6 +636,7 @@
     title: renderTitle,
     home: renderHome,
     quiz: renderQuiz,
+    kokugo: renderKokugo,
     result: renderResult,
     reward: renderReward,
     closet: renderCloset
@@ -499,16 +657,20 @@
     });
 
     bind('go-quiz', startQuiz);
+    bind('go-kokugo', startKokugo);
     bind('go-closet', function () { showScreen('closet'); });
-    bind('dev-levelup', onDevLevelUp);
+    bind('dev-levelup', function () { onDevLevelUp('sansu'); });
+    bind('dev-levelup-kokugo', function () { onDevLevelUp('kokugo'); });
     bind('adult-btn', openAdult);
 
     $('keypad').addEventListener('click', function (e) {
       var btn = e.target.closest('[data-key]');
       if (btn) pressKey(btn.getAttribute('data-key'));
     });
-    bind('feedback-next', nextQuestion);
+    bind('feedback-next', onFeedbackNext);
     bind('quiz-quit', quitQuiz);
+    bind('kokugo-quit', quitQuiz);
+    $('kokugo-choices').addEventListener('click', onChoice);
 
     // パソコンで確認するとき用に、キーボードでも答えられるようにする
     document.addEventListener('keydown', function (e) {
@@ -516,13 +678,16 @@
       if (/^[0-9]$/.test(e.key)) pressKey(e.key);
       else if (e.key === 'Backspace') pressKey('clear');
       else if (e.key === 'Enter') {
-        if (!$('feedback-next').hidden && !$('quiz-feedback').hidden) nextQuestion();
+        if (!$('feedback-next').hidden && !$('quiz-feedback').hidden) onFeedbackNext();
         else pressKey('ok');
       }
     });
 
     bind('result-reward', function () { showScreen('reward'); });
-    bind('result-again', startQuiz);
+    bind('result-again', function () {
+      if (state.quiz && state.quiz.subject === 'kokugo') startKokugo();
+      else startQuiz();
+    });
     bind('result-home', function () { showScreen('home'); });
     bind('reward-closet', onRewardCloset);
     bind('reward-home', function () { showScreen('home'); });
