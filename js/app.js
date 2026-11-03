@@ -21,11 +21,15 @@
 
   // 教科ごとの記録・ルール
   function subjectRecord(subject) {
-    return subject === 'kokugo' ? state.data.kokugo : state.data;
+    if (subject === 'kokugo') return state.data.kokugo;
+    if (subject === 'eigo') return state.data.eigo;
+    return state.data;
   }
 
   function subjectRules(subject) {
-    return subject === 'kokugo' ? Kokugo : Problems;
+    if (subject === 'kokugo') return Kokugo;
+    if (subject === 'eigo') return Eigo;
+    return Problems;
   }
 
   // ---------- 共通 ----------
@@ -83,7 +87,7 @@
     var d = state.data;
     $('home-avatar').innerHTML = Avatar.renderAvatar(d.equipped);
     $('home-name').textContent = displayName();
-    ['sansu', 'kokugo'].forEach(renderSubjectRow);
+    ['sansu', 'kokugo', 'eigo'].forEach(renderSubjectRow);
     $('dev-buttons').hidden = !DEV_MODE;
   }
 
@@ -322,34 +326,39 @@
     $('kokugo-progress').textContent = (q.index + 1) + ' / ' + q.set.length;
     $('kokugo-trace-phase').hidden = false;
     $('kokugo-read-phase').hidden = true;
-    setInstruction('ひかっている せんを なぞってね', false);
+    startTracing({ box: 'trace-box', instruction: 'kokugo-instruction', count: 'stroke-count', unit: 'かく' },
+      KanjiStrokes[k.kanji], showReadPhase);
+  }
 
-    var strokes = KanjiStrokes[k.kanji];
+  // なぞり（こくご・えいご 共通）。ids: 枠・説明文・画数の表示の id と、数え方（かく／ほん）
+  function startTracing(ids, strokes, onDone) {
+    var q = state.quiz;
+    function say(text, oops) {
+      $(ids.instruction).textContent = text;
+      $(ids.instruction).classList.toggle('oops', oops);
+    }
+    function count(done) {
+      $(ids.count).textContent = done >= strokes.length
+        ? 'ぜんぶ かけたよ'
+        : (done + 1) + ' ' + ids.unit + 'め ／ ' + strokes.length + ids.unit;
+    }
+    say('ひかっている せんを なぞってね', false);
+    count(0);
     if (q.trace) q.trace.destroy();
-    q.trace = Trace.create($('trace-box'), strokes, {
+    q.trace = Trace.create($(ids.box), strokes, {
       onStrokeOk: function (i) {
-        setInstruction(i + 1 < strokes.length ? 'じょうず！ つぎの せんだよ' : 'できた！', false);
-        updateStrokeCount(i + 1, strokes.length);
+        say(i + 1 < strokes.length ? 'じょうず！ つぎの せんだよ' : 'できた！', false);
+        count(i + 1);
       },
       onStrokeFail: function () {
-        setInstruction('おしい！ ひかっている せんを なぞってね', true);
+        say('おしい！ ひかっている せんを なぞってね', true);
       },
       onAutoStroke: function (i) {
-        setInstruction('おてほんを みてね', true);
-        updateStrokeCount(i + 1, strokes.length);
+        say('おてほんを みてね', true);
+        count(i + 1);
       },
-      onDone: showReadPhase
+      onDone: onDone
     });
-    updateStrokeCount(0, strokes.length);
-  }
-
-  function setInstruction(text, oops) {
-    $('kokugo-instruction').textContent = text;
-    $('kokugo-instruction').classList.toggle('oops', oops);
-  }
-
-  function updateStrokeCount(done, total) {
-    $('stroke-count').textContent = done >= total ? total + 'かく ぜんぶ かけたよ' : (done + 1) + ' かくめ ／ ' + total + 'かく';
   }
 
   function showReadPhase() {
@@ -422,6 +431,148 @@
       return;
     }
     renderKokugo();
+  }
+
+  // ---------- 3-3. えいご ----------
+
+  var SPEAKER_ICON = '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 18 L16 18 L26 9 L26 39 L16 30 L8 30 Z" fill="#fff"/>' +
+    '<path d="M31 17 Q36 24 31 31 M35 12 Q43 24 35 36" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>';
+
+  function startEigo() {
+    state.quiz = {
+      subject: 'eigo',
+      set: Eigo.buildSet(state.data.eigo.level, state.data.eigo.mistakes),
+      index: 0,
+      tries: 0,
+      correctCount: 0,
+      levelBefore: state.data.eigo.level,
+      locked: false,
+      trace: null,
+      feedbackTimeout: null
+    };
+    showScreen('eigo');
+  }
+
+  function currentEigo() {
+    return Eigo.get(state.quiz.set[state.quiz.index].id);
+  }
+
+  function speakCurrent() {
+    Speech.speak(currentEigo().say);
+  }
+
+  function showEigoPhase(name) {
+    ['choose', 'trace', 'repeat'].forEach(function (p) {
+      $('eigo-' + p + '-phase').hidden = p !== name;
+    });
+  }
+
+  // ① 聞いて ② 選ぶ
+  function renderEigo() {
+    var q = state.quiz;
+    var item = currentEigo();
+    q.tries = 0;
+    q.locked = false;
+    $('eigo-progress').textContent = (q.index + 1) + ' / ' + q.set.length;
+    $('eigo-voice-warning').hidden = Speech.hasEnglishVoice();
+    showEigoPhase('choose');
+    $('eigo-speak').innerHTML = SPEAKER_ICON;
+    $('eigo-ask').textContent = item.type === 'letter' ? 'きいて、あう もじを えらんでね' : 'きいて、あう えを えらんでね';
+
+    var html = '';
+    Eigo.choicesFor(item.id).forEach(function (id) {
+      var content = item.type === 'letter' ? '<span class="letter">' + id + '</span>' : EigoArt.word(id);
+      html += '<button type="button" class="eigo-choice" data-eigo="' + id + '" aria-label="' + id + '">' + content + '</button>';
+    });
+    $('eigo-choices').innerHTML = html;
+    speakCurrent();
+  }
+
+  function eigoLabel(item) {
+    return item.type === 'letter' ? item.id : item.id + ' ＝ ' + item.ja;
+  }
+
+  function onEigoChoice(e) {
+    var btn = e.target.closest('[data-eigo]');
+    var q = state.quiz;
+    if (!btn || !q || q.locked || btn.disabled) return;
+    var item = currentEigo();
+    var rec = state.data.eigo;
+
+    if (btn.getAttribute('data-eigo') === item.id) {
+      if (q.tries === 0) rec.mistakes = Eigo.removeMistake(rec.mistakes, item.id);
+      q.correctCount += 1;
+      addCorrect('eigo', 1);
+      persist();
+      q.locked = true;
+      btn.classList.add('correct');
+      openFeedback(true, 'せいかい！', eigoLabel(item), null);
+      speakCurrent();
+      q.feedbackTimeout = setTimeout(afterEigoChoice, CORRECT_DELAY_MS + 300);
+      return;
+    }
+
+    btn.disabled = true;
+    if (q.tries === 0) {
+      q.tries = 1;
+      rec.mistakes = Eigo.recordMistake(rec.mistakes, item.id, new Date().toISOString());
+      persist();
+      q.locked = true;
+      openFeedback(false, 'おしい！', 'もういちど きいて えらんでね', null);
+      q.feedbackTimeout = setTimeout(function () {
+        q.locked = false;
+        $('quiz-feedback').hidden = true;
+        speakCurrent();
+      }, RETRY_DELAY_MS);
+      return;
+    }
+
+    q.locked = true;
+    $('eigo-choices').querySelector('[data-eigo="' + item.id + '"]').classList.add('correct');
+    openFeedback(false, 'こたえは これだよ', eigoLabel(item), afterEigoChoice);
+    speakCurrent();
+  }
+
+  // ③ なぞる（アルファベットだけ）→ ④ まねして言う
+  function afterEigoChoice() {
+    var q = state.quiz;
+    clearTimeout(q.feedbackTimeout);
+    $('quiz-feedback').hidden = true;
+    var item = currentEigo();
+    if (item.type === 'letter') {
+      showEigoPhase('trace');
+      startTracing({ box: 'eigo-trace-box', instruction: 'eigo-instruction', count: 'eigo-stroke-count', unit: 'ほん' },
+        Eigo.LETTER_STROKES[item.id], showEigoRepeat);
+    } else {
+      showEigoRepeat();
+    }
+  }
+
+  function showEigoRepeat() {
+    var item = currentEigo();
+    var showKana = state.data.settings.showKatakana;
+    var words = '<div class="words">' +
+      (item.type === 'word' ? '<span class="en">' + item.id + '</span>' : '') +
+      (showKana ? '<span class="kana">' + item.kana + '</span>' : '') +
+      (item.type === 'word' ? '<span class="ja">' + item.ja + '</span>' : '') +
+      '</div>';
+    $('eigo-card').innerHTML = item.type === 'letter'
+      ? '<span class="big-letter">' + item.id + '</span>' + words
+      : '<div class="pic">' + EigoArt.word(item.id) + '</div>' + words;
+    showEigoPhase('repeat');
+    speakCurrent();
+  }
+
+  function nextEigo() {
+    var q = state.quiz;
+    Speech.stop();
+    q.index += 1;
+    if (q.index >= q.set.length) {
+      if (q.trace) q.trace.destroy();
+      showScreen('result');
+      return;
+    }
+    renderEigo();
   }
 
   // ---------- タイマー（レベル8以上） ----------
@@ -592,6 +743,7 @@
       $('adult-lock').hidden = true;
       $('adult-menu').hidden = false;
       $('adult-name').value = state.data.childName;
+      $('adult-katakana').checked = state.data.settings.showKatakana;
       $('adult-name-error').hidden = true;
       $('adult-name-ok').hidden = true;
       $('adult-confirm').hidden = true;
@@ -637,6 +789,7 @@
     home: renderHome,
     quiz: renderQuiz,
     kokugo: renderKokugo,
+    eigo: renderEigo,
     result: renderResult,
     reward: renderReward,
     closet: renderCloset
@@ -661,6 +814,8 @@
     bind('go-closet', function () { showScreen('closet'); });
     bind('dev-levelup', function () { onDevLevelUp('sansu'); });
     bind('dev-levelup-kokugo', function () { onDevLevelUp('kokugo'); });
+    bind('dev-levelup-eigo', function () { onDevLevelUp('eigo'); });
+    bind('go-eigo', startEigo);
     bind('adult-btn', openAdult);
 
     $('keypad').addEventListener('click', function (e) {
@@ -670,6 +825,18 @@
     bind('feedback-next', onFeedbackNext);
     bind('quiz-quit', quitQuiz);
     bind('kokugo-quit', quitQuiz);
+    bind('eigo-quit', function () {
+      Speech.stop();
+      quitQuiz();
+    });
+    bind('eigo-speak', speakCurrent);
+    bind('eigo-listen-again', speakCurrent);
+    bind('eigo-said', nextEigo);
+    $('eigo-choices').addEventListener('click', onEigoChoice);
+    $('adult-katakana').addEventListener('change', function () {
+      state.data.settings.showKatakana = $('adult-katakana').checked;
+      persist();
+    });
     $('kokugo-choices').addEventListener('click', onChoice);
 
     // パソコンで確認するとき用に、キーボードでも答えられるようにする
@@ -685,7 +852,9 @@
 
     bind('result-reward', function () { showScreen('reward'); });
     bind('result-again', function () {
-      if (state.quiz && state.quiz.subject === 'kokugo') startKokugo();
+      var subject = state.quiz && state.quiz.subject;
+      if (subject === 'kokugo') startKokugo();
+      else if (subject === 'eigo') startEigo();
       else startQuiz();
     });
     bind('result-home', function () { showScreen('home'); });

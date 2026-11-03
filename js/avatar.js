@@ -303,10 +303,87 @@
     hair_bun: '28 2 144 168'
   };
 
+  // ---------- えいご のアイテム（もちもの・めがね/おめん・のりもの） ----------
+
+  var EIGO_ITEMS = {
+    // もちもの（右手 140,204 で持つ）
+    hand_balloon: function () {
+      return '<path d="M140 204 Q150 150 160 96" stroke="#ADB5BD" stroke-width="1.5" fill="none"/>' +
+        '<ellipse cx="160" cy="74" rx="17" ry="21" fill="#FF6B8A"/>' +
+        '<path d="M156 96 L164 96 L160 91 Z" fill="#E64980"/>' +
+        '<ellipse cx="153" cy="66" rx="4" ry="7" fill="#fff" opacity="0.5"/>';
+    },
+    hand_wand: function () {
+      return '<path d="M138 206 L162 152" stroke="#B197FC" stroke-width="4.5" stroke-linecap="round"/>' +
+        '<path d="' + starPath(165, 143, 13, 6) + '" fill="#FFD43B" stroke="#F59F00" stroke-width="2" stroke-linejoin="round"/>' +
+        '<path d="' + starPath(184, 132, 4, 1.8) + '" fill="#FFD43B"/><path d="' + starPath(150, 126, 3.5, 1.5) + '" fill="#FFD43B"/>' +
+        '<path d="' + starPath(182, 160, 3, 1.3) + '" fill="#B197FC"/>';
+    },
+    hand_umbrella: function () {
+      return '<path d="M140 206 L140 42" stroke="#868E96" stroke-width="3" stroke-linecap="round"/>' +
+        '<path d="M140 206 Q140 215 133 212" stroke="#868E96" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+        '<path d="M92 48 Q140 -2 188 48 Q180 40 172 48 Q164 40 156 48 Q148 40 140 48 Q132 40 124 48 Q116 40 108 48 Q100 40 92 48 Z" fill="#74C0FC" stroke="#4DABF7" stroke-width="1.5"/>' +
+        '<path d="M140 22 Q126 30 124 48 M140 22 Q154 30 156 48" stroke="#fff" stroke-width="2" fill="none"/>';
+    },
+    // めがね・おめん（目は 83,88 と 117,88）
+    eye_heart: function () {
+      return '<path d="M74 85 L58 80 M126 85 L142 80" stroke="#FF4D8D" stroke-width="2.5" stroke-linecap="round"/>' +
+        '<path d="M92 86 Q100 81 108 86" stroke="#FF4D8D" stroke-width="2.5" fill="none"/>' +
+        '<path d="' + heartPath(83, 91, 9) + '" fill="#FF8FAB" fill-opacity="0.35" stroke="#FF4D8D" stroke-width="2.5"/>' +
+        '<path d="' + heartPath(117, 91, 9) + '" fill="#FF8FAB" fill-opacity="0.35" stroke="#FF4D8D" stroke-width="2.5"/>';
+    },
+    eye_star: function () {
+      return '<path d="M72 85 L58 80 M128 85 L142 80" stroke="#343A40" stroke-width="2.5" stroke-linecap="round"/>' +
+        '<path d="M94 86 Q100 82 106 86" stroke="#343A40" stroke-width="2.5" fill="none"/>' +
+        '<path d="' + starPath(83, 89, 13, 6.5) + '" fill="#343A40" stroke="#FFD43B" stroke-width="2" stroke-linejoin="round"/>' +
+        '<path d="' + starPath(117, 89, 13, 6.5) + '" fill="#343A40" stroke="#FFD43B" stroke-width="2" stroke-linejoin="round"/>' +
+        '<circle cx="79" cy="85" r="2" fill="#fff" opacity="0.7"/><circle cx="113" cy="85" r="2" fill="#fff" opacity="0.7"/>';
+    },
+    eye_mask: function () {
+      return '<path d="M60 82 Q72 68 92 79 Q100 84 108 79 Q128 68 140 82 Q138 101 118 101 Q106 101 100 93 Q94 101 82 101 Q62 101 60 82 Z" fill="#9775FA" stroke="#7048E8" stroke-width="1.5"/>' +
+        '<ellipse cx="83" cy="89" rx="8" ry="6" fill="#FFE0C8"/><ellipse cx="117" cy="89" rx="8" ry="6" fill="#FFE0C8"/>' +
+        '<ellipse cx="83" cy="89" rx="4" ry="5" fill="#3B2A20"/><ellipse cx="117" cy="89" rx="4" ry="5" fill="#3B2A20"/>' +
+        '<g fill="#FFF3BF"><circle cx="70" cy="80" r="1.6"/><circle cx="100" cy="88" r="1.6"/><circle cx="130" cy="80" r="1.6"/><circle cx="92" cy="96" r="1.3"/><circle cx="110" cy="96" r="1.3"/></g>' +
+        '<path d="M140 80 Q156 62 150 48 Q144 64 138 76 Z" fill="#FF8FAB"/>';
+    },
+    // のりもの
+    ride_skate: function () {
+      return '<rect x="54" y="271" width="92" height="9" rx="4.5" fill="#FF922B" stroke="#E8590C" stroke-width="1.5"/>' +
+        '<path d="M64 275 L136 275" stroke="#FFD43B" stroke-width="2" stroke-dasharray="6 5"/>' +
+        '<circle cx="70" cy="285" r="5.5" fill="#343A40"/><circle cx="130" cy="285" r="5.5" fill="#343A40"/>' +
+        '<circle cx="70" cy="285" r="2" fill="#ADB5BD"/><circle cx="130" cy="285" r="2" fill="#ADB5BD"/>';
+    },
+    ride_bike: function () {
+      return '<circle cx="152" cy="276" r="13" fill="none" stroke="#343A40" stroke-width="3"/>' +
+        '<circle cx="188" cy="276" r="13" fill="none" stroke="#343A40" stroke-width="3"/>' +
+        '<path d="M152 276 L164 258 L180 258 L188 276 M164 258 L170 276 L180 258 M170 276 L152 276" stroke="#FF6B8A" stroke-width="3" fill="none" stroke-linejoin="round"/>' +
+        '<path d="M161 254 L168 254 M180 258 L177 248 L184 246" stroke="#343A40" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+        '<path d="M180 248 L186 244" stroke="#FF6B8A" stroke-width="2.5" stroke-linecap="round"/>';
+    },
+    ride_balloon: function () {
+      return '<path d="M24 74 L30 92 M48 74 L42 92" stroke="#A9783C" stroke-width="1.5"/>' +
+        '<path d="M36 22 C14 22 10 48 20 64 C26 74 32 78 36 80 C40 78 46 74 52 64 C62 48 58 22 36 22 Z" fill="#FF8FAB"/>' +
+        '<path d="M36 22 C28 30 26 58 36 80 C46 58 44 30 36 22 Z" fill="#FFE066"/>' +
+        '<path d="M14 46 Q36 52 58 46" stroke="#74C0FC" stroke-width="4" fill="none"/>' +
+        '<rect x="28" y="90" width="16" height="12" rx="2" fill="#C2884D" stroke="#8B5A3C" stroke-width="1.5"/>';
+    }
+  };
+
+  THUMB_BOX.hand_balloon = '128 48 52 170';
+  THUMB_BOX.hand_wand = '128 122 64 92';
+  THUMB_BOX.hand_umbrella = '86 14 108 204';
+  THUMB_BOX.eye_heart = '52 70 96 34';
+  THUMB_BOX.eye_star = '52 70 96 36';
+  THUMB_BOX.eye_mask = '56 44 100 64';
+  THUMB_BOX.ride_skate = '50 262 100 32';
+  THUMB_BOX.ride_bike = '134 238 70 56';
+  THUMB_BOX.ride_balloon = '6 18 60 88';
+
   function drawItem(id) {
     if (draw[id]) return draw[id]();
     if (PETS[id]) return PETS[id]();
     if (BACKGROUNDS[id]) return BACKGROUNDS[id]();
+    if (EIGO_ITEMS[id]) return EIGO_ITEMS[id]();
     return '';
   }
 
@@ -315,6 +392,7 @@
     var eq = equipped || {};
     return '<svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="アバター">' +
       drawItem(eq.background) +
+      drawItem(eq.vehicle) +
       hair(eq.hair, 'back') +
       body() +
       drawItem(eq.shoes) +
@@ -322,7 +400,9 @@
       drawItem(eq.accessory) +
       head() +
       hair(eq.hair, 'front') +
+      drawItem(eq.eyewear) +
       drawItem(eq.head) +
+      drawItem(eq.handheld) +
       drawItem(eq.pet) +
       '</svg>';
   }

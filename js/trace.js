@@ -160,6 +160,12 @@
       }
     }
 
+    // 短い線で、逆向きになぞったのに合格にしないため（逆向きの方が形がよく合うならやり直し）
+    function reversed(points) {
+      var a = resample(points, SAMPLES);
+      return deviation(a.slice().reverse(), sampled[current]) < deviation(a, sampled[current]);
+    }
+
     // 似た線が近くにある字（青・学など）で、まだ書いていない線をなぞったのに合格にしないため
     function closerToLaterStroke(points) {
       var a = resample(points, SAMPLES);
@@ -207,7 +213,7 @@
       // タッチしただけ（短すぎる線）は数えない
       if (polylineLength(points) < MIN_DRAW_LENGTH && lengths[current] >= MIN_DRAW_LENGTH) return;
 
-      if (matches(points, sampled[current], lengths[current]) && !closerToLaterStroke(points)) {
+      if (matches(points, sampled[current], lengths[current]) && !reversed(points) && !closerToLaterStroke(points)) {
         addDone(current, false);
         if (h.onStrokeOk) h.onStrokeOk(current);
         advance();

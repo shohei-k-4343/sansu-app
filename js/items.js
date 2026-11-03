@@ -1,4 +1,4 @@
-// アイテムの一覧（SPEC.md 4-1「ごほうび」・14-6「こくご のアイテム」）
+// アイテムの一覧（SPEC.md 4-1「ごほうび」・14-6「こくご のアイテム」・15-6「えいご のアイテム」）
 (function (root) {
   'use strict';
 
@@ -6,14 +6,17 @@
   var SLOTS = [
     { id: 'head', name: 'あたま', allowNone: true },
     { id: 'hair', name: 'かみがた', allowNone: false },
+    { id: 'eyewear', name: 'めがね・おめん', allowNone: true },
     { id: 'clothes', name: 'ふく', allowNone: false },
     { id: 'shoes', name: 'くつ', allowNone: false },
     { id: 'accessory', name: 'アクセサリー', allowNone: true },
+    { id: 'handheld', name: 'もちもの', allowNone: true },
     { id: 'pet', name: 'ペット', allowNone: true },
+    { id: 'vehicle', name: 'のりもの', allowNone: true },
     { id: 'background', name: 'はいけい', allowNone: true }
   ];
 
-  var SUBJECT_NAMES = { sansu: 'さんすう', kokugo: 'こくご' };
+  var SUBJECT_NAMES = { sansu: 'さんすう', kokugo: 'こくご', eigo: 'えいご' };
 
   // subject: どの教科でもらえるか / level: その教科の何レベルでもらえるか（1 は最初から持っている）
   var ITEMS = [
@@ -39,16 +42,29 @@
     { id: 'bg_sea', name: 'うみ', slot: 'background', subject: 'kokugo', level: 7 },
     { id: 'hair_bun', name: 'おだんご', slot: 'hair', subject: 'kokugo', level: 8 },
     { id: 'pet_dog', name: 'イヌ', slot: 'pet', subject: 'kokugo', level: 9 },
-    { id: 'bg_castle', name: 'おしろ', slot: 'background', subject: 'kokugo', level: 10 }
+    { id: 'bg_castle', name: 'おしろ', slot: 'background', subject: 'kokugo', level: 10 },
+
+    { id: 'hand_balloon', name: 'ふうせん', slot: 'handheld', subject: 'eigo', level: 2 },
+    { id: 'eye_heart', name: 'ハートの めがね', slot: 'eyewear', subject: 'eigo', level: 3 },
+    { id: 'ride_skate', name: 'スケートボード', slot: 'vehicle', subject: 'eigo', level: 4 },
+    { id: 'hand_wand', name: 'まほうの ステッキ', slot: 'handheld', subject: 'eigo', level: 5 },
+    { id: 'eye_star', name: 'ほしの サングラス', slot: 'eyewear', subject: 'eigo', level: 6 },
+    { id: 'ride_bike', name: 'じてんしゃ', slot: 'vehicle', subject: 'eigo', level: 7 },
+    { id: 'hand_umbrella', name: 'かさ', slot: 'handheld', subject: 'eigo', level: 8 },
+    { id: 'eye_mask', name: 'キラキラ マスク', slot: 'eyewear', subject: 'eigo', level: 9 },
+    { id: 'ride_balloon', name: 'ききゅう', slot: 'vehicle', subject: 'eigo', level: 10 }
   ];
 
   var DEFAULT_EQUIPPED = {
     head: 'head_ribbon',
     hair: 'hair_long',
+    eyewear: null,
     clothes: 'clothes_basic',
     shoes: 'shoes_pink',
     accessory: null,
+    handheld: null,
     pet: null,
+    vehicle: null,
     background: null
   };
 

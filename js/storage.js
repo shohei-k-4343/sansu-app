@@ -1,4 +1,4 @@
-// データの保存と読み込み（SPEC.md 6「データ構造」・14-8）
+// データの保存と読み込み（SPEC.md 6「データ構造」・14-8・15-7）
 // データは iPad の中（localStorage）だけに保存し、外には送らない
 // ※ 保存の名前（KEY）は変えないこと。変えると今までの記録が読めなくなる
 (function (root) {
@@ -8,9 +8,10 @@
   var Problems = root.Problems || require('./problems.js');
   var Kokugo = root.Kokugo || require('./kokugo.js');
   var Kanji = root.Kanji || require('./kanji.js');
+  var Eigo = root.Eigo || require('./eigo.js');
 
   var KEY = 'sansu-app-v1';
-  var VERSION = 2;
+  var VERSION = 3;
   var MAX_NAME_LENGTH = 10;
 
   // level / totalCorrect / mistakes は さんすう の記録（version 1 からそのまま）
@@ -21,6 +22,8 @@
       level: 1,
       totalCorrect: 0,
       kokugo: { level: 1, totalCorrect: 0, mistakes: [] },
+      eigo: { level: 1, totalCorrect: 0, mistakes: [] },
+      settings: { showKatakana: false },
       ownedItems: [],
       equipped: Object.assign({}, Items.DEFAULT_EQUIPPED),
       mistakes: [],
@@ -34,7 +37,8 @@
   function refreshOwned(data) {
     data.level = Problems.levelFromCorrect(data.totalCorrect);
     data.kokugo.level = Kokugo.levelFromCorrect(data.kokugo.totalCorrect);
-    data.ownedItems = Items.ownedIds({ sansu: data.level, kokugo: data.kokugo.level });
+    data.eigo.level = Eigo.levelFromCorrect(data.eigo.totalCorrect);
+    data.ownedItems = Items.ownedIds({ sansu: data.level, kokugo: data.kokugo.level, eigo: data.eigo.level });
   }
 
   function validCount(value) {
@@ -68,7 +72,25 @@
     data.totalCorrect = validCount(raw.totalCorrect);
     var kokugo = raw.kokugo && typeof raw.kokugo === 'object' ? raw.kokugo : {};
     data.kokugo.totalCorrect = validCount(kokugo.totalCorrect);
+    var eigo = raw.eigo && typeof raw.eigo === 'object' ? raw.eigo : {};
+    data.eigo.totalCorrect = validCount(eigo.totalCorrect);
     refreshOwned(data);
+
+    if (raw.settings && typeof raw.settings === 'object') {
+      data.settings.showKatakana = raw.settings.showKatakana === true;
+    }
+
+    if (Array.isArray(eigo.mistakes)) {
+      data.eigo.mistakes = eigo.mistakes.filter(function (m) {
+        return m && Eigo.get(m.id);
+      }).slice(0, Eigo.MAX_MISTAKES).map(function (m) {
+        return {
+          id: m.id,
+          missCount: validMissCount(m.missCount),
+          lastMissedAt: typeof m.lastMissedAt === 'string' ? m.lastMissedAt : data.createdAt
+        };
+      });
+    }
 
     if (Array.isArray(kokugo.mistakes)) {
       data.kokugo.mistakes = kokugo.mistakes.filter(function (m) {

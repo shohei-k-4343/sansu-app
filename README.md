@@ -1,6 +1,8 @@
-# さんすう・こくご きせかえ
+# さんすう・こくご・えいご きせかえ
 
-年長さん向けの、たし算・ひき算と小1の漢字を練習できる着せ替えアプリです。仕様は [SPEC.md](SPEC.md) を見てください。
+年長さん向けの、たし算・ひき算、小1の漢字、アルファベットと英単語を練習できる着せ替えアプリです。仕様は [SPEC.md](SPEC.md) を見てください。
+
+英語の読み上げには iPad に入っている声を使います（`js/speech.js`）。英単語の絵は `js/eigo-art.js` に描いてあります。
 
 書き順データは [KanjiVG](https://kanjivg.tagaini.net)（© Ulrich Apel、CC BY-SA 3.0）を使っています。`js/kanji-strokes.js` は `node tools/build-kanji-strokes.js` で作り直せます。
 

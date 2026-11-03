@@ -2,7 +2,7 @@
 // ・インターネットにつながっているときは、いつも最新のファイルを取りに行く（古い画面と新しいプログラムが混ざらないように）
 // ・つながっていないときだけ、保存しておいたファイルを使う
 // アプリのファイルを変更したら、CACHE_NAME の数字を1つ上げると保存も新しい版に入れ替わる
-var CACHE_NAME = 'sansu-app-v3';
+var CACHE_NAME = 'sansu-app-v4';
 var FILES = [
   './',
   './index.html',
@@ -13,9 +13,12 @@ var FILES = [
   './js/kanji.js',
   './js/kanji-strokes.js',
   './js/kokugo.js',
+  './js/eigo.js',
+  './js/eigo-art.js',
   './js/storage.js',
   './js/avatar.js',
   './js/trace.js',
+  './js/speech.js',
   './js/app.js',
   './icons/icon-180.png',
   './icons/icon-192.png',

@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="さんすう">
   <meta name="theme-color" content="#FFE4F0">
-  <title>さんすう・こくご きせかえ</title>
+  <title>さんすう・こくご・えいご きせかえ</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
   <link rel="icon" href="icons/icon-192.png">
@@ -49,15 +49,22 @@
               <div class="stars" id="home-stars-kokugo"></div>
               <p class="home-next" id="home-next-kokugo"></p>
             </div>
+            <div class="subject-row eigo">
+              <p class="subject-title"><span class="subject-name">えいご</span><span class="subject-level" id="home-level-eigo"></span></p>
+              <div class="stars" id="home-stars-eigo"></div>
+              <p class="home-next" id="home-next-eigo"></p>
+            </div>
           </div>
-          <div class="home-buttons">
+          <div class="home-buttons subject-buttons">
             <button class="btn btn-pink btn-big btn-subject" id="go-quiz" type="button">さんすう</button>
             <button class="btn btn-mint btn-big btn-subject" id="go-kokugo" type="button">こくご</button>
+            <button class="btn btn-orange btn-big btn-subject" id="go-eigo" type="button">えいご</button>
             <button class="btn btn-sky btn-big btn-subject" id="go-closet" type="button">きせかえ</button>
           </div>
           <div class="dev-buttons" id="dev-buttons" hidden>
             <button class="btn btn-small dev-btn" id="dev-levelup" type="button">（かいはつよう）さんすう ＋10</button>
             <button class="btn btn-small dev-btn" id="dev-levelup-kokugo" type="button">（かいはつよう）こくご ＋8</button>
+            <button class="btn btn-small dev-btn" id="dev-levelup-eigo" type="button">（かいはつよう）えいご ＋8</button>
           </div>
         </div>
       </div>
@@ -113,6 +120,39 @@
         <p class="kokugo-ask">この かんじ、なんて よむ？</p>
         <div class="choices" id="kokugo-choices"></div>
       </div>
+    </section>
+
+    <!-- 3-3. えいごの問題画面 -->
+    <section class="screen" id="screen-eigo">
+      <div class="quiz-top">
+        <button class="back-btn" id="eigo-quit" type="button" aria-label="ホームへ もどる">✕</button>
+        <p class="quiz-progress" id="eigo-progress"></p>
+        <span class="back-btn-spacer"></span>
+      </div>
+      <!-- ① 聞いて ② 選ぶ -->
+      <div class="kokugo-layout eigo-phase" id="eigo-choose-phase">
+        <button class="speaker-btn" id="eigo-speak" type="button" aria-label="もういちど きく"></button>
+        <p class="kokugo-ask" id="eigo-ask"></p>
+        <div class="eigo-choices" id="eigo-choices"></div>
+      </div>
+      <!-- ③ なぞる（アルファベットだけ） -->
+      <div class="kokugo-layout" id="eigo-trace-phase" hidden>
+        <div class="trace-box" id="eigo-trace-box"></div>
+        <div class="trace-side">
+          <p class="kokugo-instruction" id="eigo-instruction"></p>
+          <p class="stroke-count" id="eigo-stroke-count"></p>
+        </div>
+      </div>
+      <!-- ④ まねして言う -->
+      <div class="kokugo-layout eigo-phase" id="eigo-repeat-phase" hidden>
+        <div class="eigo-card" id="eigo-card"></div>
+        <p class="kokugo-ask">きいて、まねして いってみよう</p>
+        <div class="result-buttons">
+          <button class="btn btn-sky btn-big" id="eigo-listen-again" type="button">🔊 もういちど きく</button>
+          <button class="btn btn-pink btn-big" id="eigo-said" type="button">いえた！</button>
+        </div>
+      </div>
+      <p class="voice-warning" id="eigo-voice-warning" hidden>おとなの方へ：英語の音声が見つかりません。iPadの「設定」→「アクセシビリティ」→「読み上げコンテンツ」→「声」で英語の声を追加してください。</p>
     </section>
 
     <!-- 4. けっか画面 -->
@@ -186,6 +226,11 @@
           <p class="error" id="adult-name-error" hidden>なまえを いれてね</p>
           <p class="ok-text" id="adult-name-ok" hidden>保存しました</p>
           <hr>
+          <label class="toggle-row" for="adult-katakana">
+            <span>えいご：カタカナの読みがなを出す</span>
+            <input id="adult-katakana" type="checkbox">
+          </label>
+          <hr>
           <div id="adult-reset-area">
             <button class="btn btn-small btn-danger" id="adult-reset" type="button">データをリセット</button>
           </div>
@@ -211,9 +256,12 @@
   <script src="js/kanji.js"></script>
   <script src="js/kanji-strokes.js"></script>
   <script src="js/kokugo.js"></script>
+  <script src="js/eigo.js"></script>
+  <script src="js/eigo-art.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/avatar.js"></script>
   <script src="js/trace.js"></script>
+  <script src="js/speech.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
