@@ -4,6 +4,8 @@
 
 英語の読み上げには iPad に入っている声を使います（`js/speech.js`）。英単語の絵は `js/eigo-art.js` に描いてあります。
 
+BGM と効果音は `sounds/` フォルダの mp3 を `js/sound.js` で鳴らしています。BGM は 魔王魂（CC BY 4.0、「音楽：魔王魂」の表示が必要）、効果音は 効果音ラボ の素材です。ファイルが読めないときは、プログラムで作った音で代わりに鳴ります。音を入れ替えたら `sw.js` のファイル一覧も直してください。
+
 書き順データは [KanjiVG](https://kanjivg.tagaini.net)（© Ulrich Apel、CC BY-SA 3.0）を使っています。`js/kanji-strokes.js` は `node tools/build-kanji-strokes.js` で作り直せます。
 
 ## パソコンで動かして確認する

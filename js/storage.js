@@ -1,4 +1,4 @@
-// データの保存と読み込み（SPEC.md 6「データ構造」・14-8・15-7）
+// データの保存と読み込み（SPEC.md 6「データ構造」・14-8・15-7・16-4）
 // データは iPad の中（localStorage）だけに保存し、外には送らない
 // ※ 保存の名前（KEY）は変えないこと。変えると今までの記録が読めなくなる
 (function (root) {
@@ -23,7 +23,7 @@
       totalCorrect: 0,
       kokugo: { level: 1, totalCorrect: 0, mistakes: [] },
       eigo: { level: 1, totalCorrect: 0, mistakes: [] },
-      settings: { showKatakana: false },
+      settings: { showKatakana: false, bgm: true, sfx: true },
       ownedItems: [],
       equipped: Object.assign({}, Items.DEFAULT_EQUIPPED),
       mistakes: [],
@@ -78,6 +78,9 @@
 
     if (raw.settings && typeof raw.settings === 'object') {
       data.settings.showKatakana = raw.settings.showKatakana === true;
+      // BGM・効果音は、はっきり「オフ」にしたときだけ止める（16章）
+      data.settings.bgm = raw.settings.bgm !== false;
+      data.settings.sfx = raw.settings.sfx !== false;
     }
 
     if (Array.isArray(eigo.mistakes)) {

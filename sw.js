@@ -2,7 +2,7 @@
 // ・インターネットにつながっているときは、いつも最新のファイルを取りに行く（古い画面と新しいプログラムが混ざらないように）
 // ・つながっていないときだけ、保存しておいたファイルを使う
 // アプリのファイルを変更したら、CACHE_NAME の数字を1つ上げると保存も新しい版に入れ替わる
-var CACHE_NAME = 'sansu-app-v4';
+var CACHE_NAME = 'sansu-app-v5';
 var FILES = [
   './',
   './index.html',
@@ -18,8 +18,16 @@ var FILES = [
   './js/storage.js',
   './js/avatar.js',
   './js/trace.js',
+  './js/sound.js',
   './js/speech.js',
   './js/app.js',
+  './sounds/maou_bgm_acoustic44.mp3',
+  './sounds/maou_bgm_acoustic21.mp3',
+  './sounds/tap.mp3',
+  './sounds/correct.mp3',
+  './sounds/wrong.mp3',
+  './sounds/levelup.mp3',
+  './sounds/reward.mp3',
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png'

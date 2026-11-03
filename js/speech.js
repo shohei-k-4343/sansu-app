@@ -37,6 +37,14 @@
     return supported() && !!(voice || pickVoice());
   }
 
+  // 読み上げ中は BGM を小さくする（SPEC.md 16-2）
+  function duck(on) {
+    if (root.Sound) root.Sound.duckForSpeech(on);
+  }
+
+  var current = null;
+  var DUCK_MAX_MS = 4000;  // 読み上げの終わりが知らされなくても、この時間で BGM を元にもどす
+
   function speak(text) {
     if (!supported()) return false;
     var s = synth();
@@ -46,11 +54,23 @@
     if (voice) u.voice = voice;
     u.rate = RATE;
     u.pitch = PITCH;
+    current = u;
+    var finish = function () {
+      if (current !== u) return;
+      current = null;
+      duck(false);
+    };
+    u.onend = finish;
+    u.onerror = finish;
+    setTimeout(finish, DUCK_MAX_MS);
+    duck(true);
     s.speak(u);
     return true;
   }
 
   function stop() {
+    current = null;
+    duck(false);
     if (supported()) synth().cancel();
   }
 

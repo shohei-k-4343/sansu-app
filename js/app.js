@@ -44,8 +44,12 @@
     return /(ちゃん|くん|さん)$/.test(name) ? name : name + 'ちゃん';
   }
 
+  // 画面ごとの BGM（SPEC.md 16-2）
+  var BGM_FOR = { quiz: 'quiz', kokugo: 'quiz', eigo: 'quiz' };
+
   function showScreen(name) {
     $('quiz-feedback').hidden = true;
+    Sound.setBgm(BGM_FOR[name] || 'home');
     var screens = document.querySelectorAll('.screen');
     for (var i = 0; i < screens.length; i++) {
       screens[i].classList.toggle('active', screens[i].id === 'screen-' + name);
@@ -87,6 +91,7 @@
     var d = state.data;
     $('home-avatar').innerHTML = Avatar.renderAvatar(d.equipped);
     $('home-name').textContent = displayName();
+    renderBgmButton();
     ['sansu', 'kokugo', 'eigo'].forEach(renderSubjectRow);
     $('dev-buttons').hidden = !DEV_MODE;
   }
@@ -101,6 +106,30 @@
     $('home-level-' + subject).textContent = 'レベル ' + rec.level;
     $('home-stars-' + subject).innerHTML = stars;
     $('home-next-' + subject).textContent = toNext === 0 ? 'さいこう レベル！' : 'あと ' + toNext + 'もん';
+  }
+
+  // ---------- 音（SPEC.md 16章） ----------
+
+  var BGM_ON_ICON = '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 18 L16 18 L26 9 L26 39 L16 30 L8 30 Z" fill="#8a6f7d"/>' +
+    '<path d="M31 17 Q36 24 31 31 M35 12 Q43 24 35 36" stroke="#8a6f7d" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>';
+  var BGM_OFF_ICON = '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 18 L16 18 L26 9 L26 39 L16 30 L8 30 Z" fill="#c4b3bc"/>' +
+    '<path d="M32 18 L42 30 M42 18 L32 30" stroke="#e0607e" stroke-width="3.5" stroke-linecap="round"/></svg>';
+
+  function applySound() {
+    Sound.setEnabled(state.data.settings);
+  }
+
+  function renderBgmButton() {
+    var on = state.data.settings.bgm;
+    $('bgm-btn').innerHTML = on ? BGM_ON_ICON : BGM_OFF_ICON;
+    $('bgm-btn').setAttribute('aria-label', on ? 'おんがくを とめる' : 'おんがくを ながす');
+  }
+
+  function setSoundSetting(key, on) {
+    state.data.settings[key] = on;
+    persist();
+    applySound();
+    renderBgmButton();
   }
 
   // 動作確認用：正解数を1レベルぶん増やす（?dev=1 のときだけ表示）
@@ -257,6 +286,7 @@
 
   // せいかい・おしい の表示。onNext があれば「つぎへ」ボタンを出す
   function openFeedback(good, text, sub, onNext) {
+    Sound.play(good ? 'correct' : 'wrong');
     $('feedback-icon').innerHTML = good ? Avatar.renderHanamaru() : Avatar.renderSoftFace();
     $('feedback-text').textContent = text;
     $('feedback-text').classList.toggle('soft', !good);
@@ -649,6 +679,7 @@
     $('result-message').textContent = displayName() + '、' + message;
 
     $('result-levelup').hidden = !leveledUp;
+    if (leveledUp) Sound.play('levelup');
     $('result-levelup-sub').textContent = Items.SUBJECT_NAMES[q.subject] + ' レベル ' + levelAfter + ' に なったよ';
     $('result-reward').hidden = !(leveledUp && state.rewardItems.length > 0);
     $('result-again').hidden = !$('result-reward').hidden;
@@ -663,6 +694,7 @@
         '<p>' + item.name + ' を もらったよ！</p></div>';
     });
     $('reward-items').innerHTML = html;
+    Sound.play('reward');
   }
 
   function onRewardCloset() {
@@ -744,6 +776,8 @@
       $('adult-menu').hidden = false;
       $('adult-name').value = state.data.childName;
       $('adult-katakana').checked = state.data.settings.showKatakana;
+      $('adult-bgm').checked = state.data.settings.bgm;
+      $('adult-sfx').checked = state.data.settings.sfx;
       $('adult-name-error').hidden = true;
       $('adult-name-ok').hidden = true;
       $('adult-confirm').hidden = true;
@@ -773,6 +807,7 @@
     SaveData.clear();
     state.data = SaveData.defaultData();
     state.closetSlot = 'clothes';
+    applySound();
     closeAdult();
     showScreen('title');
   }
@@ -803,6 +838,16 @@
     var loaded = SaveData.load();
     state.data = loaded.data;
     if (loaded.status === 'broken') persist();
+    applySound();
+
+    // ボタンを押したら「ポッ」
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('button');
+      if (btn && !btn.disabled) Sound.play('tap');
+    });
+    bind('bgm-btn', function () { setSoundSetting('bgm', !state.data.settings.bgm); });
+    $('adult-bgm').addEventListener('change', function () { setSoundSetting('bgm', $('adult-bgm').checked); });
+    $('adult-sfx').addEventListener('change', function () { setSoundSetting('sfx', $('adult-sfx').checked); });
 
     bind('start-btn', onStart);
     $('name-input').addEventListener('keydown', function (e) {
